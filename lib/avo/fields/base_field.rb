@@ -168,8 +168,9 @@ module Avo
 
         property ||= id
 
-        # Get model value
-        final_value = @model.send(property) if is_model?(@model) && @model.respond_to?(property)
+        # Get field value from nested model or base model. Currently only supports one level of nesting (e.g. user.profile.name)
+        field_model = nested_model || @model
+        final_value = field_model.send(property) if is_model?(field_model) && field_model.respond_to?(property)
 
         # On new views and actions modals we need to prefill the fields with the default value
         if should_fill_with_default_value? && default.present?
@@ -185,6 +186,26 @@ module Avo
         final_value = instance_exec(final_value, &@format_using) if @format_using.present?
 
         final_value
+      end
+
+      def nested_attribute
+        @nested_attribute ||= @args[:nested_attribute]
+      end
+
+      def nested_attribute?
+        nested_attribute.present?
+      end
+
+      def error_key
+        if nested_attribute?
+          "#{nested_attribute}.#{id}"
+        else
+          id
+        end
+      end
+
+      def nested_model
+        @model.send(nested_attribute) if nested_attribute? && @model.respond_to?(nested_attribute)
       end
 
       def fill_field(model, key, value, params)

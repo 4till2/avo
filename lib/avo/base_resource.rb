@@ -399,7 +399,8 @@ module Avo
         end
 
       default_values.each do |id, value|
-        if @model.send(id).nil?
+        # Check that id is valid for cases of nested attributes
+        if @model.respond_to?(id) && @model.send(id).nil?
           @model.send("#{id}=", value)
         end
       end

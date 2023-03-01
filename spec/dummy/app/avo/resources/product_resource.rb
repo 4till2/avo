@@ -21,6 +21,7 @@ class ProductResource < Avo::BaseResource
   field :image, as: :file, is_image: true
   field :price, as: :number
   field :category, as: :select, enum: ::Product.categories
+  field :order, as: :has_one
 
   grid do
     cover :image, as: :file, is_image: true, link_to_resource: true, html: {

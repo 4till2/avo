@@ -21,4 +21,6 @@ class Product < ApplicationRecord
 
   has_one_attached :image
   has_many_attached :images
+  has_one :order, as: :orderable
+  validates :title, presence: true # Temporarily required to demonstrate the nested error message.
 end

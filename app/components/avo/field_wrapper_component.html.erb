@@ -20,8 +20,8 @@
         <% end %>
       <% elsif on_edit? %>
         <%= content %>
-        <% if record.present? and record.errors.include? field.id %>
-          <div class="text-red-600 mt-2 text-sm"><%= record.errors.full_messages_for(field.id).to_sentence %></div>
+        <% if record.present? and record.errors.include? field.error_key %>
+          <div class="text-red-600 mt-2 text-sm"><%= record.errors.full_messages_for(field.error_key).to_sentence %></div>
         <% end %>
         <% if help.present? %>
           <div class="text-gray-600 mt-2 text-sm"><%== help %></div>

@@ -1,4 +1,7 @@
-<%= content_tag :div,
+<!--When the dynamic-form stimulus controller is used, the form is updated in place via a turbo frame.-->
+<% update_form_url ||= helpers.new_resource_path(resource: @resource) %>
+<%= turbo_frame_tag(@resource.model_name.to_s) do %>
+  <%= content_tag :div,
   data: {
     model_name: @resource.model_name.to_s,
     resource_name: @resource.class.to_s,
@@ -52,6 +55,17 @@
               <%= t('avo.save').capitalize %>
             <% end %>
           <% end %>
+          <!--A hidden button to trigger a turbo form refresh from the dynamic-form-controller. Triggered
+          by the field with: data: { action: 'dynamic-form#refresh' }-->
+          <button formmethod="get"
+                  formaction="<%= update_form_url %>"
+                  data-dynamic-form-target="refresh"
+                  data-turbo-frame=<%= @resource.model_name.to_s %>
+                  hidden></button>
+          <!-- When the visitor has JavaScript disabled, we show a button that will trigger the same action as the remote click.-->
+          <noscript>
+            <button formmethod="get" formaction="<%= update_form_url %>">Update Form Fields</button>
+          </noscript>
         <% end %>
         <%# Extract the main panel and display the fields here. %>
         <%# This way we'll be able to render the footer buttons under the main fields. %>
@@ -59,10 +73,15 @@
           <% c.body do %>
             <div class="divide-y">
               <% main_panel.items.each_with_index do |field, index| %>
+                <% use_form = form %>
+                <% if field.nested_attribute? %>
+                  <% @resource.model.send("build_#{field.nested_attribute}") if @resource.model.send(field.nested_attribute).nil? %>
+                  <% form.fields_for(field.nested_attribute){ |nested_form| use_form = nested_form } %>
+                <% end %>
                 <%= render field
                   .hydrate(resource: @resource, model: @resource.model, user: @resource.user, view: view_for(field))
                   .component_for_view(view_for field)
-                  .new(field: field, resource: @resource, index: index, form: form, compact: sidebar.present?)
+                  .new(field: field, resource: @resource, index: index, form: use_form, compact: sidebar.present?)
                 %>
               <% end %>
             </div>
@@ -102,4 +121,5 @@
       <% end %>
     <% end %>
   <% end %>
+<% end %>
 <% end %>

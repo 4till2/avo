@@ -153,7 +153,7 @@ module Avo
     end
 
     def set_model_to_fill
-      @model_to_fill = @resource.model_class.new if @view == :create
+      @model_to_fill = @resource.model_class.new if @view.in?([:create, :new])
       @model_to_fill = @model if @view == :update
     end
 

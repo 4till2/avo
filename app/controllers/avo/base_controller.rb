@@ -11,7 +11,7 @@ module Avo
     before_action :set_model, only: [:show, :edit, :destroy, :update, :order]
     before_action :set_model_to_fill
     before_action :set_edit_title_and_breadcrumbs, only: [:edit, :update]
-    before_action :fill_model, only: [:create, :update]
+    before_action :fill_model, only: [:create, :update, :new]
     # Don't run base authorizations for associations
     before_action :authorize_base_action, if: -> { controller_name != "associations" }
     before_action :set_pagy_locale, only: :index
@@ -104,7 +104,7 @@ module Avo
     end
 
     def new
-      @model = @resource.model_class.new
+      # model gets instantiated and potentially filled in the fill_model method
       @resource = @resource.hydrate(model: @model, view: :new, user: _current_user)
 
       set_actions
@@ -237,7 +237,11 @@ module Avo
     end
 
     def model_params
-      request_params = params.require(model_param_key).permit(permitted_params)
+      request_params = if @view == :new
+                         params.fetch(model_param_key, {}).permit(permitted_params) || {}
+                       else
+                         params.require(model_param_key).permit(permitted_params)
+                       end
 
       if @resource.devise_password_optional && request_params[:password].blank? && request_params[:password_confirmation].blank?
         request_params.delete(:password_confirmation)

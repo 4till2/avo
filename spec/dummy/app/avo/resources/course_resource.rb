@@ -6,7 +6,7 @@ class CourseResource < Avo::BaseResource
     scope.ransack(id_eq: params[:q], name_cont: params[:q], m: "or").result(distinct: false)
   end
   self.keep_filters_panel_open = true
-  self.stimulus_controllers = "course-resource toggle-fields"
+  self.stimulus_controllers = "dynamic-form toggle-fields"
 
   field :id, as: :id
   field :name, as: :text, html: {
@@ -68,15 +68,18 @@ class CourseResource < Avo::BaseResource
       edit: {
         input: {
           data: {
-            action: "course-resource#onCountryChange"
+            action: 'dynamic-form#refresh'
           }
         }
       }
     }
   field :city,
     as: :select,
-    options: Course.cities.values.flatten.map { |city| [city, city] }.to_h,
-    display_value: false
+    options: ->(model:, resource:, view:, field:) do
+      Course.cities[model.country.to_sym]&.map { |city| [city, city] }.to_h
+    end,
+    display_value: false,
+    visible: ->(resource:) { resource.model.country.present? }
   field :links, as: :has_many, searchable: true, placeholder: "Click to choose a link",
     discreet_pagination: true
 
